@@ -17,7 +17,12 @@ struct Args {
     list: bool,
 
     /// USB VID:PID for Player 1's lightgun (e.g., 046D:C05A).
-    #[arg(short = '1', long, value_parser = parse_vid_pid, required = false)]
+    #[arg(
+        short = '1',
+        long,
+        value_parser = parse_vid_pid,
+        required_unless_present = "list"
+    )]
     gun1: Option<(u16, u16)>,
 
     /// USB VID:PID for Player 2's lightgun (e.g., 046D:C05B).
@@ -133,9 +138,13 @@ fn main() {
     }
 
     // Find gun1 device by VID:PID.
-    let gun1 = args
-        .gun1
-        .expect("--gun1 is required when not using --list.");
+    let gun1 = match args.gun1 {
+        Some(g) => g,
+        None => {
+            error!("--gun1 is required unless --list is specified.");
+            process::exit(2);
+        }
+    };
     let gun1_index = match find_device_by_vid_pid(&mice, gun1.0, gun1.1) {
         Some(idx) => idx,
         None => {
