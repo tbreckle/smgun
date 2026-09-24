@@ -1,3 +1,6 @@
+// anstream strips colors when not writing to a terminal and translates them for legacy
+// Windows consoles.
+use anstream::println;
 use clap::Parser;
 use log::{error, info};
 use sm3lgs::MouseDevice;
@@ -38,35 +41,45 @@ struct Args {
     )]
     ini: PathBuf,
 
-    /// Use InputAnalogGunX/Y instead of InputGunX/Y (and InputAnalogTriggerLeft/Right instead of InputTriggerLeft/Right).
+    /// Use InputAnalogGunX/Y and InputAnalogTriggerLeft/Right instead of InputGunX/Y, InputTrigger and InputOffscreen.
     #[arg(long)]
     use_analog: bool,
 }
 
 fn parse_vid_pid(s: &str) -> Result<(u16, u16), String> {
-    let parts: Vec<&str> = s.split(':').collect();
-    if parts.len() != 2 {
-        return Err(format!(
+    let parse_id = |id: &str, what: &str| {
+        let id = id.trim();
+        if id.is_empty() || id.len() > 4 || !id.chars().all(|c| c.is_ascii_hexdigit()) {
+            return Err(format!(
+                "Invalid {} '{}'. Must be a hex value with up to 4 digits.",
+                what, id
+            ));
+        }
+        u16::from_str_radix(id, 16).map_err(|e| e.to_string())
+    };
+
+    let (vid, pid) = s.split_once(':').ok_or_else(|| {
+        format!(
             "Invalid VID:PID format '{}'. Expected VID:PID (e.g., 046D:C05A).",
             s
-        ));
-    }
+        )
+    })?;
 
-    let vid = u16::from_str_radix(parts[0], 16)
-        .map_err(|_| format!("Invalid VID '{}'. Must be a 4-digit hex value.", parts[0]))?;
-
-    let pid = u16::from_str_radix(parts[1], 16)
-        .map_err(|_| format!("Invalid PID '{}'. Must be a 4-digit hex value", parts[1]))?;
-
-    Ok((vid, pid))
+    Ok((parse_id(vid, "VID")?, parse_id(pid, "PID")?))
 }
 
 /// Searches enumerated devices for a matching VID:PID combination.
 ///
-/// Returns the device index (1-based) if a device with the specified VID:PID is found.
-fn find_device_by_vid_pid(mice: &[MouseDevice], vid: u16, pid: u16) -> Option<usize> {
+/// Returns the device index (1-based) of the first device with the specified VID:PID,
+/// skipping the device with index `exclude` (e.g. the one already assigned to Player 1).
+fn find_device_by_vid_pid(
+    mice: &[MouseDevice],
+    vid: u16,
+    pid: u16,
+    exclude: Option<usize>,
+) -> Option<usize> {
     mice.iter()
-        .find(|m| m.vid == vid && m.pid == pid)
+        .find(|m| m.vid == vid && m.pid == pid && Some(m.index) != exclude)
         .map(|m| m.index)
 }
 
@@ -103,9 +116,7 @@ fn print_banner() {
 }
 
 fn main() {
-    env_logger::Builder::from_default_env()
-        .filter_level(log::LevelFilter::Info)
-        .init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     print_banner();
 
@@ -115,17 +126,17 @@ fn main() {
     let mice = match sm3lgs::enumerate_mice() {
         Ok(mice) => mice,
         Err(e) => {
-            error!("Failed to enumerate USB devices: {}", e);
+            error!("Failed to enumerate devices: {}", e);
             process::exit(1);
         }
     };
 
     if mice.is_empty() {
-        error!("No USB HID devices found that can be used as lightguns.");
-        process::exit(1);
+        error!("No devices found that can be used as lightguns.");
+        process::exit(if args.list { 0 } else { 1 });
     }
 
-    info!("Found {} USB device(s):", mice.len());
+    info!("Found {} device(s):", mice.len());
     for mouse in &mice {
         info!("  {}", mouse);
     }
@@ -145,7 +156,7 @@ fn main() {
             process::exit(2);
         }
     };
-    let gun1_index = match find_device_by_vid_pid(&mice, gun1.0, gun1.1) {
+    let gun1_index = match find_device_by_vid_pid(&mice, gun1.0, gun1.1, None) {
         Some(idx) => idx,
         None => {
             error!(
@@ -163,16 +174,23 @@ fn main() {
 
     // Find gun2 device if specified.
     let gun2_index = if let Some((vid, pid)) = args.gun2 {
-        match find_device_by_vid_pid(&mice, vid, pid) {
+        match find_device_by_vid_pid(&mice, vid, pid, Some(gun1_index)) {
             Some(idx) => {
                 info!("Player 2: Device {} (VID:{:04X} PID:{:04X})", idx, vid, pid);
                 Some(idx)
             }
             None => {
-                error!(
-                    "Player 2 lightgun with VID:{:04X} PID:{:04X} not found.",
-                    vid, pid
-                );
+                if (vid, pid) == gun1 {
+                    error!(
+                        "Player 2 lightgun with VID:{:04X} PID:{:04X} not found (only one device with this VID:PID, already assigned to Player 1).",
+                        vid, pid
+                    );
+                } else {
+                    error!(
+                        "Player 2 lightgun with VID:{:04X} PID:{:04X} not found.",
+                        vid, pid
+                    );
+                }
                 process::exit(1);
             }
         }
@@ -195,5 +213,40 @@ fn main() {
             error!("Failed to update INI file: {}", e);
             process::exit(1);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn mouse(index: usize, vid: u16, pid: u16) -> MouseDevice {
+        MouseDevice {
+            index,
+            name: String::new(),
+            vid,
+            pid,
+            bus_id: 0,
+        }
+    }
+
+    #[test]
+    fn parses_vid_pid() {
+        assert_eq!(parse_vid_pid("046D:C05A"), Ok((0x046D, 0xC05A)));
+        assert_eq!(parse_vid_pid("46d:c05a"), Ok((0x046D, 0xC05A)));
+        assert!(parse_vid_pid("046D").is_err());
+        assert!(parse_vid_pid("046D:C05A:1").is_err());
+        assert!(parse_vid_pid("+46D:C05A").is_err());
+        assert!(parse_vid_pid("0046D:C05A").is_err());
+        assert!(parse_vid_pid(":C05A").is_err());
+    }
+
+    #[test]
+    fn player2_skips_player1_device() {
+        let mice = [mouse(1, 1, 2), mouse(2, 3, 4), mouse(3, 1, 2)];
+        assert_eq!(find_device_by_vid_pid(&mice, 1, 2, None), Some(1));
+        assert_eq!(find_device_by_vid_pid(&mice, 1, 2, Some(1)), Some(3));
+        assert_eq!(find_device_by_vid_pid(&mice, 3, 4, Some(1)), Some(2));
+        assert_eq!(find_device_by_vid_pid(&mice[..2], 1, 2, Some(1)), None);
     }
 }

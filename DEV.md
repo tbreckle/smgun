@@ -5,10 +5,9 @@ This document covers technical details about building, developing, and contribut
 ## Requirements
 
 - **Rust 2021 Edition** - Install from https://rustup.rs/
-- **libusb development libraries**
+- **libusb development libraries** (not needed on Windows)
   - Ubuntu/Debian: `sudo apt-get install libusb-1.0-0-dev`
   - macOS: `brew install libusb`
-  - Windows: Download from https://libusb.info/
 
 ## Building
 
@@ -19,7 +18,6 @@ cargo build --release
 ```
 
 The compiled binary will be at:
-```bash
 ```bash
 ./target/release/sm3lgs
 ```
@@ -64,9 +62,14 @@ sm3lgs --gun1 046D:C05A --gun2 046D:C05B --ini Config/Supermodel.ini
 sm3lgs --gun1 046D:C05A --ini Config/Supermodel.ini
 ```
 
-### Use non-analog controls:
+### Use analog gun controls (InputAnalogGunX/Y, InputAnalogTriggerLeft/Right):
 ```bash
-sm3lgs --gun1 046D:C05A --gun2 046D:C05B --ini Config/Supermodel.ini --use_analog false
+sm3lgs --gun1 046D:C05A --gun2 046D:C05B --ini Config/Supermodel.ini --use-analog
+```
+
+### Enable debug logging:
+```bash
+RUST_LOG=debug sm3lgs --gun1 046D:C05A --ini Config/Supermodel.ini
 ```
 
 ## Testing & Debugging
@@ -100,9 +103,9 @@ cargo tree
 
 ### Linux
 
-- Devices are detected via `/sys/bus/usb/devices/` first (no permissions needed)
-- Falls back to USB descriptor reading if sysfs unavailable
-- Works without root/sudo when using sysfs path
+- Devices are enumerated with libusb and sorted by bus number
+- Device names are read from `/sys/bus/usb/devices/<bus>-<port path>/` (no permissions needed)
+- Falls back to USB descriptor reading if sysfs is unavailable
 - VID:PID matching works across all device names
 
 ### macOS
@@ -113,9 +116,12 @@ cargo tree
 
 ### Windows
 
-- Uses USB descriptor reading
-- May require driver installation for some devices
-- VID:PID values are the primary matching mechanism
+- Does not use libusb. Mice are enumerated via the Raw Input API (`GetRawInputDeviceList`)
+  in the same order as Supermodel3's RawInput system, so the `MOUSEx` indices match
+  (list walked backwards, `Root#RDP_` devices skipped, only `RIM_TYPEMOUSE` counted)
+- Every mouse counts towards the index, including non-USB ones (shown as VID:0000 PID:0000)
+- Supermodel3 must use `InputSystem = rawinput` for per-mouse lightgun input
+- Device names come from the HID product/manufacturer strings
 
 ## Contributing
 

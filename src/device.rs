@@ -11,11 +11,12 @@ use std::fmt;
 ///
 /// # Fields
 ///
-/// - `index` - Sequential index starting from 1, ordered by bus ID.
+/// - `index` - Sequential index starting from 1, matching Supermodel3's `MOUSEx` numbering
+///   (ordered by bus ID, or by Raw Input enumeration order on Windows).
 /// - `name` - Device name (product name or manufacturer name from sysfs/descriptors).
-/// - `vid` - USB Vendor ID in hexadecimal (used for matching).
-/// - `pid` - USB Product ID in hexadecimal (used for matching).
-/// - `bus_id` - USB bus number used for sorting and device identification.
+/// - `vid` - USB Vendor ID in hexadecimal (used for matching, 0 if unknown).
+/// - `pid` - USB Product ID in hexadecimal (used for matching, 0 if unknown).
+/// - `bus_id` - USB bus number used for sorting and device identification (0 on Windows).
 #[derive(Clone, Debug)]
 pub struct MouseDevice {
     pub index: usize,

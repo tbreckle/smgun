@@ -29,31 +29,43 @@ The tool automatically updates your Supermodel3 INI file with the matched lightg
 
 ## How It Works
 
-The tool searches for USB devices matching your specified VID:PID values and updates your INI file with the following mappings:
+The tool searches for devices matching your specified VID:PID values and updates your INI file with the following mappings (the mouse numbers depend on the order in which Supermodel3 sees your mice):
 
 ### For Player 1:
-```
-InputAnalogGunX = "MOUSE1_XAXIS"           # Horizontal aiming
-InputAnalogGunY = "MOUSE1_YAXIS"           # Vertical aiming
-InputAnalogTriggerLeft = "MOUSE1_LEFT_BUTTON"   # Trigger
-InputAnalogTriggerRight = "MOUSE1_RIGHT_BUTTON" # Secondary trigger
+```ini
+InputGunX = "MOUSE1_XAXIS"               ; Horizontal aiming
+InputGunY = "MOUSE1_YAXIS"               ; Vertical aiming
+InputTrigger = "MOUSE1_LEFT_BUTTON"      ; Trigger
+InputOffscreen = "MOUSE1_RIGHT_BUTTON"   ; Point off-screen (reload)
 ```
 
 ### For Player 2:
-```
-InputAnalogGunX2 = "MOUSE2_XAXIS"          # Horizontal aiming
-InputAnalogGunY2 = "MOUSE2_YAXIS"          # Vertical aiming
-InputAnalogTriggerLeft2 = "MOUSE2_LEFT_BUTTON"   # Trigger
-InputAnalogTriggerRight2 = "MOUSE2_RIGHT_BUTTON" # Secondary trigger
+```ini
+InputGunX2 = "MOUSE2_XAXIS"
+InputGunY2 = "MOUSE2_YAXIS"
+InputTrigger2 = "MOUSE2_LEFT_BUTTON"
+InputOffscreen2 = "MOUSE2_RIGHT_BUTTON"
 ```
 
-These values tell Supermodel3 which USB device to use for each player's gun control.
+With `--use-analog`, the analog gun settings (Ocean Hunter, LA Machineguns) are written instead: `InputAnalogGunX`, `InputAnalogGunY`, `InputAnalogTriggerLeft` and `InputAnalogTriggerRight` (with a `2` suffix for Player 2).
+
+Settings are updated wherever they appear (including per-game sections, so they can't override the new values). Settings missing from `[ Global ]` are added to it.
+
+These values tell Supermodel3 which mouse device to use for each player's gun control.
+
+### Windows
+
+On Windows, the tool enumerates mice through the Raw Input API in exactly the same order as Supermodel3, so the `MOUSEx` numbers match. Supermodel3 has to use the Raw Input system for multiple mice to work (or run it with `-input-system=rawinput`):
+
+```ini
+InputSystem = "rawinput"
+```
 
 ## Features
 
 - **VID:PID Matching** - Automatically finds lightguns by USB vendor and product IDs
 - **Batch Configuration** - Configure both players in a single command
-- **Conflict Prevention** - The tool prevents assigning the same device to both players
+- **Conflict Prevention** - The tool never assigns the same device to both players (two guns with the same VID:PID are assigned in device order)
 - **Flexible Input** - Supports both single-gun and dual-gun setups
 - **INI Preservation** - Your existing INI structure, comments, and settings are maintained
 - **No Root Required** - Works without administrator/sudo privileges on Linux

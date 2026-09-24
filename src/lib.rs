@@ -45,10 +45,19 @@
 //!    - Uses "Unknown Device" if nothing is found.
 //! 5. **Sorting** - Orders devices by bus ID (ascending).
 //! 6. **Indexing** - Assigns sequential indices starting from 1.
+//!
+//! On Windows, devices are instead enumerated through the Raw Input API in the same order
+//! Supermodel3 uses, so indices match its `MOUSEx` numbering (see the `rawinput` module).
 
 pub mod device;
 pub mod ini;
+#[cfg(windows)]
+pub mod rawinput;
+#[cfg(not(windows))]
 pub mod usb;
 
 pub use device::MouseDevice;
+#[cfg(windows)]
+pub use rawinput::enumerate_mice;
+#[cfg(not(windows))]
 pub use usb::enumerate_mice;
