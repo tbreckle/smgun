@@ -5,13 +5,13 @@ use std::fmt;
 /// Represents a USB lightgun device with its metadata.
 ///
 /// This struct stores information about a connected USB device that can be used
-/// as a lightgun input for Supermodel3 emulator. Devices are identified by their
+/// as a lightgun input for Supermodel emulator. Devices are identified by their
 /// USB vendor ID (VID) and product ID (PID), which are used for matching against
 /// user-specified lightgun configurations.
 ///
 /// # Fields
 ///
-/// - `index` - Sequential index starting from 1, matching Supermodel3's `MOUSEx` numbering
+/// - `index` - Sequential index starting from 1, matching Supermodel's `MOUSEx` numbering
 ///   (ordered by bus ID, or by Raw Input enumeration order on Windows).
 /// - `name` - Device name (product name or manufacturer name from sysfs/descriptors).
 /// - `vid` - USB Vendor ID in hexadecimal (used for matching, 0 if unknown).

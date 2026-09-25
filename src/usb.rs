@@ -2,7 +2,7 @@
 //!
 //! This module handles USB device enumeration, filtering for HID devices that can be used
 //! as lightguns, and retrieving device information. Devices are matched by their USB vendor
-//! ID (VID) and product ID (PID) for Supermodel3 configuration.
+//! ID (VID) and product ID (PID) for Supermodel configuration.
 
 use crate::device::MouseDevice;
 use rusb::{Context, UsbContext};
@@ -25,7 +25,7 @@ const DESCRIPTOR_TIMEOUT: Duration = Duration::from_millis(500);
 /// # Example
 ///
 /// ```no_run
-/// # use sm3lgs::enumerate_mice;
+/// # use smgun::enumerate_mice;
 /// let devices = enumerate_mice()?;
 /// for device in devices {
 ///     println!("{}", device);  // Shows index, name, VID:PID

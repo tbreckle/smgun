@@ -1,10 +1,10 @@
-//! INI file handling for Supermodel3 lightgun configuration.
+//! INI file handling for Supermodel lightgun configuration.
 //!
-//! This module reads and writes Supermodel3 INI configuration files, automatically
+//! This module reads and writes Supermodel INI configuration files, automatically
 //! updating the lightgun input mappings based on matched USB devices. It preserves
 //! the original file layout, comments, and other settings.
 //!
-//! Parsing follows Supermodel3's own INI rules (`Src/Util/ConfigBuilders.cpp`):
+//! Parsing follows Supermodel's own INI rules (`Src/Util/ConfigBuilders.cpp`):
 //! - `;` starts a comment unless it is inside double quotes.
 //! - Settings before the first section header belong to `[ Global ]`.
 //! - A header may list several sections (`[ a, b ]`); an empty name means `Global`.
@@ -19,7 +19,7 @@ const UTF8_BOM: &str = "\u{feff}";
 /// Builds the INI key/value mappings for Player 1 and optionally Player 2 lightguns.
 ///
 /// Based on the matched device indices from USB VID:PID matching, this generates
-/// the settings that will be written to the Supermodel3 INI file.
+/// the settings that will be written to the Supermodel INI file.
 /// Supports both analog and digital (light) gun inputs.
 fn build_key_mappings(
     player1_index: usize,
@@ -191,7 +191,7 @@ fn update_content(content: &str, key_mappings: &[(String, String)]) -> String {
     output
 }
 
-/// Writes lightgun device configuration to a Supermodel3 INI file.
+/// Writes lightgun device configuration to a Supermodel INI file.
 ///
 /// Updates the INI file with the matched lightgun device indices based on VID:PID matching.
 /// Preserves the original file layout, comments, and other settings while updating only
@@ -200,7 +200,7 @@ fn update_content(content: &str, key_mappings: &[(String, String)]) -> String {
 ///
 /// # Arguments
 ///
-/// - `path` - Path to the Supermodel3 INI file.
+/// - `path` - Path to the Supermodel INI file.
 /// - `player1_index` - Index of the matched Player 1 lightgun device.
 /// - `player2_index` - Optional index of the matched Player 2 lightgun device.
 /// - `use_analog` - If true, uses InputAnalogGunX/Y and InputAnalogTriggerLeft/Right;

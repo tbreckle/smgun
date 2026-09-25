@@ -1,6 +1,6 @@
 # Development Guide
 
-This document covers technical details about building, developing, and contributing to the Supermodel3 Lightgun Auto-Configurator.
+This document covers technical details about building, developing, and contributing to the Supermodel Lightgun Auto-Configurator.
 
 ## Requirements
 
@@ -19,7 +19,7 @@ cargo build --release
 
 The compiled binary will be at:
 ```bash
-./target/release/sm3lgs
+./target/release/smgun
 ```
 
 Build a debug binary (faster compile, slower runtime):
@@ -30,7 +30,7 @@ cargo build
 
 Debug binary location:
 ```bash
-./target/debug/sm3lgs
+./target/debug/smgun
 ```
 
 ## Running
@@ -42,34 +42,34 @@ cargo run --release -- --list
 
 Or run the compiled binary directly:
 ```bash
-./target/release/sm3lgs --list
+./target/release/smgun --list
 ```
 
 ## Usage
 
 ### List all connected USB devices:
 ```bash
-sm3lgs --list
+smgun --list
 ```
 
 ### Configure with VID:PID values:
 ```bash
-sm3lgs --gun1 046D:C05A --gun2 046D:C05B --ini Config/Supermodel.ini
+smgun --gun1 046D:C05A --gun2 046D:C05B --ini Config/Supermodel.ini
 ```
 
 ### Configure single gun (Gun 1 only):
 ```bash
-sm3lgs --gun1 046D:C05A --ini Config/Supermodel.ini
+smgun --gun1 046D:C05A --ini Config/Supermodel.ini
 ```
 
 ### Use analog gun controls (InputAnalogGunX/Y, InputAnalogTriggerLeft/Right):
 ```bash
-sm3lgs --gun1 046D:C05A --gun2 046D:C05B --ini Config/Supermodel.ini --use-analog
+smgun --gun1 046D:C05A --gun2 046D:C05B --ini Config/Supermodel.ini --use-analog
 ```
 
 ### Enable debug logging:
 ```bash
-RUST_LOG=debug sm3lgs --gun1 046D:C05A --ini Config/Supermodel.ini
+RUST_LOG=debug smgun --gun1 046D:C05A --ini Config/Supermodel.ini
 ```
 
 ## Testing & Debugging
@@ -117,10 +117,10 @@ cargo tree
 ### Windows
 
 - Does not use libusb. Mice are enumerated via the Raw Input API (`GetRawInputDeviceList`)
-  in the same order as Supermodel3's RawInput system, so the `MOUSEx` indices match
+  in the same order as Supermodel's RawInput system, so the `MOUSEx` indices match
   (list walked backwards, `Root#RDP_` devices skipped, only `RIM_TYPEMOUSE` counted)
 - Every mouse counts towards the index, including non-USB ones (shown as VID:0000 PID:0000)
-- Supermodel3 must use `InputSystem = rawinput` for per-mouse lightgun input
+- Supermodel must use `InputSystem = rawinput` for per-mouse lightgun input
 - Device names come from the HID product/manufacturer strings
 
 ## Contributing

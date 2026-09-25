@@ -1,8 +1,8 @@
-//! Supermodel3 Lightgun Auto-Configurator
+//! Supermodel Lightgun Auto-Configurator
 //!
-//! A library for automatically configuring Supermodel3 emulator to select connected lightguns
+//! A library for automatically configuring Supermodel emulator to select connected lightguns
 //! by searching for USB VID:PID combinations. Enumerates HID class devices and matches them
-//! against user-specified vendor and product IDs, then updates the Supermodel3 INI configuration.
+//! against user-specified vendor and product IDs, then updates the Supermodel INI configuration.
 //!
 //! # Features
 //!
@@ -15,7 +15,7 @@
 //! # Usage
 //!
 //! ```no_run
-//! use sm3lgs::enumerate_mice;
+//! use smgun::enumerate_mice;
 //!
 //! fn main() -> Result<(), String> {
 //!     let mice = enumerate_mice()?;
@@ -47,7 +47,7 @@
 //! 6. **Indexing** - Assigns sequential indices starting from 1.
 //!
 //! On Windows, devices are instead enumerated through the Raw Input API in the same order
-//! Supermodel3 uses, so indices match its `MOUSEx` numbering (see the `rawinput` module).
+//! Supermodel uses, so indices match its `MOUSEx` numbering (see the `rawinput` module).
 
 pub mod device;
 pub mod ini;

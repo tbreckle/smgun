@@ -1,11 +1,11 @@
 //! Windows Raw Input mouse enumeration.
 //!
-//! On Windows, Supermodel3 (with `InputSystem = rawinput`) numbers mice in the order it
+//! On Windows, Supermodel (with `InputSystem = rawinput`) numbers mice in the order it
 //! finds them via the Raw Input API, not by USB bus. To produce matching `MOUSEx` indices
-//! this module mirrors Supermodel3's enumeration (`CDirectInputSystem::OpenKeyboardsAndMice`):
+//! this module mirrors Supermodel's enumeration (`CDirectInputSystem::OpenKeyboardsAndMice`):
 //!
 //! 1. Query all devices with `GetRawInputDeviceList`.
-//! 2. Walk the list **backwards** (Supermodel3 does this because new devices are usually
+//! 2. Walk the list **backwards** (Supermodel does this because new devices are usually
 //!    added at the beginning).
 //! 3. Skip devices whose name can't be read or is longer than 255 characters.
 //! 4. Skip Remote Desktop devices (`Root#RDP_`).
@@ -32,15 +32,15 @@ use windows_sys::Win32::UI::Input::{
     RIM_TYPEMOUSE,
 };
 
-/// Maximum device name length Supermodel3 accepts (`MAX_NAME_LENGTH`). Devices with
+/// Maximum device name length Supermodel accepts (`MAX_NAME_LENGTH`). Devices with
 /// longer names fail its `GetRawInputDeviceInfo` call and are skipped.
 const MAX_NAME_LENGTH: u32 = 255;
 
-/// Enumerates all Raw Input mice in the same order as Supermodel3.
+/// Enumerates all Raw Input mice in the same order as Supermodel.
 ///
 /// # Returns
 ///
-/// - `Ok(Vec<MouseDevice>)` - Vector of detected mice, indexed like Supermodel3's `MOUSEx`.
+/// - `Ok(Vec<MouseDevice>)` - Vector of detected mice, indexed like Supermodel's `MOUSEx`.
 /// - `Err(String)` - Error message if the Raw Input device list can't be queried.
 pub fn enumerate_mice() -> Result<Vec<MouseDevice>, String> {
     let devices = get_raw_input_devices()?;
@@ -104,7 +104,7 @@ fn get_raw_input_devices() -> Result<Vec<RAWINPUTDEVICELIST>, String> {
 /// Reads the device interface path (e.g. `\\?\HID#VID_046D&PID_C05A#...`) of a Raw Input
 /// device, without the trailing NUL.
 ///
-/// Returns `None` in the same cases where Supermodel3 skips the device.
+/// Returns `None` in the same cases where Supermodel skips the device.
 fn get_device_path(device: &RAWINPUTDEVICELIST) -> Option<Vec<u16>> {
     let mut len: u32 = 0;
     // SAFETY: Passing a null buffer only queries the name length (in characters).

@@ -1,15 +1,15 @@
-# Supermodel3 Lightgun Auto-Configurator
+# Supermodel Lightgun Auto-Configurator
 
-![Build Status](https://github.com/YOUR_USERNAME/sm3cfg/workflows/Build/badge.svg)
+![Build Status](https://github.com/tbreckle/smgun/workflows/Build/badge.svg)
 
-Automatically configure Supermodel3 emulator to select connected lightguns by searching for USB VID:PID combinations and automatically updating the Supermodel3 configuration file. No manual assignment needed—just specify the VID:PID of your lightguns and the tool handles the rest.
+Automatically configure Supermodel emulator to select connected lightguns by searching for USB VID:PID combinations and automatically updating the Supermodel configuration file. No manual assignment needed—just specify the VID:PID of your lightguns and the tool handles the rest.
 
 ## What It Does
 
 - **Searches** all connected USB devices for specified VID:PID combinations
 - **Matches** lightguns by their USB vendor ID and product ID
 - **Auto-Configures** Player 1 and Player 2 settings based on device discovery
-- **Updates** the Supermodel3 INI file automatically
+- **Updates** the Supermodel INI file automatically
 - **Preserves** your existing INI file layout and other settings
 
 ## Quick Start
@@ -18,18 +18,18 @@ Automatically configure Supermodel3 emulator to select connected lightguns by se
 2. Identify your lightguns' USB VID:PID values
 3. Run the tool with your VID:PID combinations:
    ```bash
-   sm3lgs --gun1 046D:C05A --gun2 046D:C05B --ini Config/Supermodel.ini
+   smgun --gun1 046D:C05A --gun2 046D:C05B --ini Config/Supermodel.ini
    ```
 4. Or list available devices first:
    ```bash
-   sm3lgs --list
+   smgun --list
    ```
 
-The tool automatically updates your Supermodel3 INI file with the matched lightgun devices.
+The tool automatically updates your Supermodel INI file with the matched lightgun devices.
 
 ## How It Works
 
-The tool searches for devices matching your specified VID:PID values and updates your INI file with the following mappings (the mouse numbers depend on the order in which Supermodel3 sees your mice):
+The tool searches for devices matching your specified VID:PID values and updates your INI file with the following mappings (the mouse numbers depend on the order in which Supermodel sees your mice):
 
 ### For Player 1:
 ```ini
@@ -51,11 +51,11 @@ With `--use-analog`, the analog gun settings (Ocean Hunter, LA Machineguns) are 
 
 Settings are updated wherever they appear (including per-game sections, so they can't override the new values). Settings missing from `[ Global ]` are added to it.
 
-These values tell Supermodel3 which mouse device to use for each player's gun control.
+These values tell Supermodel which mouse device to use for each player's gun control.
 
 ### Windows
 
-On Windows, the tool enumerates mice through the Raw Input API in exactly the same order as Supermodel3, so the `MOUSEx` numbers match. Supermodel3 has to use the Raw Input system for multiple mice to work (or run it with `-input-system=rawinput`):
+On Windows, the tool enumerates mice through the Raw Input API in exactly the same order as Supermodel, so the `MOUSEx` numbers match. Supermodel has to use the Raw Input system for multiple mice to work (or run it with `-input-system=rawinput`):
 
 ```ini
 InputSystem = "rawinput"
@@ -82,10 +82,10 @@ The tool detects any USB HID (Human Interface Device) with input endpoints, whic
 
 ### Pre-built Binaries
 
-Download pre-built binaries for Linux and Windows from the [GitHub Actions artifacts](https://github.com/YOUR_USERNAME/sm3cfg/actions). Each successful build produces:
-- `sm3lgs-linux-x86_64` - Linux binary
-- `sm3lgs-windows-x86_64.exe` - Windows binary
-- `sm3lgs-all-platforms` - Combined archive with all binaries
+Download pre-built binaries for Linux and Windows from the [GitHub Actions artifacts](https://github.com/tbreckle/smgun/actions). Each successful build produces:
+- `smgun-linux-x86_64` - Linux binary
+- `smgun-windows-x86_64.exe` - Windows binary
+- `smgun-all-platforms` - Combined archive with all binaries
 
 ### Build from Source
 

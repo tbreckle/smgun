@@ -3,17 +3,17 @@
 use anstream::println;
 use clap::Parser;
 use log::{error, info};
-use sm3lgs::MouseDevice;
+use smgun::MouseDevice;
 use std::path::PathBuf;
 use std::process;
 
-/// Supermodel3 lightgun auto-configurator - automatically select connected lightguns by VID:PID
+/// Supermodel lightgun auto-configurator - automatically select connected lightguns by VID:PID
 ///
 /// This tool searches for USB devices matching specified VID:PID combinations and automatically
-/// updates the Supermodel3 emulator configuration to use them for player 1 and 2 lightgun inputs.
+/// updates the Supermodel emulator configuration to use them for player 1 and 2 lightgun inputs.
 #[derive(Parser, Debug)]
-#[command(name = "sm3lgs")]
-#[command(about = "Auto-configure Supermodel3 lightguns by USB VID:PID matching", long_about = None)]
+#[command(name = "smgun")]
+#[command(about = "Auto-configure Supermodel lightguns by USB VID:PID matching", long_about = None)]
 struct Args {
     /// List all connected USB devices and their VID:PID values, then exit.
     #[arg(short, long)]
@@ -32,7 +32,7 @@ struct Args {
     #[arg(short = '2', long, value_parser = parse_vid_pid)]
     gun2: Option<(u16, u16)>,
 
-    /// Path to the Supermodel3 INI file to update.
+    /// Path to the Supermodel INI file to update.
     #[arg(
         short,
         long,
@@ -89,25 +89,17 @@ fn print_banner() {
     let l3 = "\x1b[36m";
     let l4 = "\x1b[34m";
     let l5 = "\x1b[34m";
-    let l6 = "\x1b[34m";
 
     let r = "\x1b[0m";
-    println!("{}               ________ .__                 {}", l1, r);
-    println!("{}  ______ _____ \\_____  \\|  |    ____  ______{}", l2, r);
-    println!("{} /  ___//     \\  _(__  <|  |   / ___\\/  ___/{}", l3, r);
-    println!(
-        "{} \\___ \\|  Y Y  \\/       \\  |__/ /_/  >___ \\ {}",
-        l4, r
-    );
-    println!("{}/____  >__|_|  /______  /____/\\___  /____  >{}", l5, r);
-    println!(
-        "{}     \\/      \\/       \\/     /_____/     \\/ {}",
-        l6, r
-    );
+    println!("{}{}{}", l1, r"  ______ _____    ____  __ __  ____  ", r);
+    println!("{}{}{}", l2, r" /  ___//     \  / ___\|  |  \/    \ ", r);
+    println!("{}{}{}", l3, r" \___ \|  Y Y  \/ /_/  >  |  /   |  \", r);
+    println!("{}{}{}", l4, r"/____  >__|_|  /\___  /|____/|___|  /", r);
+    println!("{}{}{}", l5, r"     \/      \//_____/            \/ ", r);
 
     println!();
     println!(
-        "Supermodel3 Lightgun Auto-Configurator v{} (hash: {}, date: {})",
+        "Supermodel Lightgun Auto-Configurator v{} (hash: {}, date: {})",
         env!("CARGO_PKG_VERSION"),
         env!("GIT_HASH"),
         env!("BUILD_DATE")
@@ -123,7 +115,7 @@ fn main() {
     let args = Args::parse();
 
     // Enumerate all connected USB devices.
-    let mice = match sm3lgs::enumerate_mice() {
+    let mice = match smgun::enumerate_mice() {
         Ok(mice) => mice,
         Err(e) => {
             error!("Failed to enumerate devices: {}", e);
@@ -202,10 +194,10 @@ fn main() {
     info!("");
 
     // Write configuration to INI file based on matched devices.
-    match sm3lgs::ini::write_mouse_config(&args.ini, gun1_index, gun2_index, args.use_analog) {
+    match smgun::ini::write_mouse_config(&args.ini, gun1_index, gun2_index, args.use_analog) {
         Ok(_) => {
             info!(
-                "Successfully updated Supermodel3 configuration: {}",
+                "Successfully updated Supermodel configuration: {}",
                 args.ini.display()
             );
         }

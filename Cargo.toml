@@ -1,8 +1,8 @@
 [package]
-name = "sm3lgs"
+name = "smgun"
 version = "0.1.0"
 edition = "2021"
-description = "Auto-configure Supermodel3 emulator by automatically selecting connected lightguns via USB VID:PID matching and updating the configuration"
+description = "Auto-configure Supermodel emulator by automatically selecting connected lightguns via USB VID:PID matching and updating the configuration"
 
 [dependencies]
 anstream = "1.0"
@@ -23,7 +23,7 @@ windows-sys = { version = "0.61.2", features = [
 ] }
 
 [[bin]]
-name = "sm3lgs"
+name = "smgun"
 path = "src/main.rs"
 
 [profile.dev]

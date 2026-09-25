@@ -18,12 +18,12 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact_name: sm3lgs
-            asset_name: sm3lgs-linux-x86_64
+            artifact_name: smgun
+            asset_name: smgun-linux-x86_64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact_name: sm3lgs.exe
-            asset_name: sm3lgs-windows-x86_64.exe
+            artifact_name: smgun.exe
+            asset_name: smgun-windows-x86_64.exe
 
     runs-on: ${{ matrix.os }}
 
@@ -109,11 +109,11 @@ jobs:
           mkdir -p release
           cp artifacts/*/* release/
           cd release
-          chmod +x sm3lgs 2>/dev/null || true
-          tar czf ../sm3lgs-builds.tar.gz *
+          chmod +x smgun 2>/dev/null || true
+          tar czf ../smgun-builds.tar.gz *
 
       - name: Upload combined archive
         uses: actions/upload-artifact@v4
         with:
-          name: sm3lgs-all-platforms
-          path: sm3lgs-builds.tar.gz
+          name: smgun-all-platforms
+          path: smgun-builds.tar.gz
