@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-09-26
+
 ### Added
 - Assigns lightguns to Player 1/2 in the Supermodel INI by USB VID:PID
 - `--list` shows all connected devices with their `MOUSEx` index
