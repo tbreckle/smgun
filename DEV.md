@@ -123,6 +123,34 @@ cargo tree
 - Supermodel must use `InputSystem = rawinput` for per-mouse lightgun input
 - Device names come from the HID product/manufacturer strings
 
+## Versioning & CI
+
+Versions are SemVer and computed by `scripts/version.sh` from the GitFlow branch and the
+`vX.Y.Z` tags. `Cargo.toml` stays at `0.0.0`; don't bump it. The version is injected at build
+time via `SMGUN_VERSION` (read by `build.rs`):
+
+- tag `vX.Y.Z` → `X.Y.Z`
+- `release/X.Y.Z` or `hotfix/X.Y.Z` → `X.Y.Z-rc.N`
+- anything else (incl. `develop`) → `0.0.0+<sha>`
+
+```bash
+SMGUN_VERSION=$(scripts/version.sh) cargo build --release
+scripts/test.sh    # tests for version.sh and changelog.sh
+```
+
+Add changes to `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md). Branching and releases are
+described in [GITFLOW.md](GITFLOW.md), the workflows in [.github/WORKFLOWS.md](.github/WORKFLOWS.md).
+
+CI checks (fix these before pushing):
+
+```bash
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
+cargo clippy --all-targets --target x86_64-pc-windows-msvc -- -D warnings   # Windows path, from Linux
+cargo test
+shellcheck scripts/*.sh
+```
+
 ## Contributing
 
 When making changes:

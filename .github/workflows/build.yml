@@ -1,119 +1,161 @@
 name: Build
 
+# Reusable build of smgun with an injected version (see scripts/version.sh).
+# Called by ci.yml for every push/PR and by release-finish.yml for official releases.
 on:
-  push:
-    branches: [main, dev]
-  pull_request:
-    branches: [main, dev]
-  workflow_dispatch:
+  workflow_call:
+    inputs:
+      version:
+        description: "Version to inject, e.g. 1.2.0, 1.2.0-rc.3 or 0.0.0+abc1234"
+        required: true
+        type: string
+      ref:
+        description: "Commit to build (defaults to the commit of the calling event)"
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            artifact_name: smgun
-            asset_name: smgun-linux-x86_64
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            artifact_name: smgun.exe
-            asset_name: smgun-windows-x86_64.exe
-
+  app:
+    name: App (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x86_64
+            os: ubuntu-latest
+            archive: tar.gz
+          - name: windows-x86_64
+            os: windows-latest
+            archive: zip
+    env:
+      SMGUN_VERSION: ${{ inputs.version }}
+      PACKAGE: smgun-${{ inputs.version }}-${{ matrix.name }}
+    defaults:
+      run:
+        shell: bash
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
-          fetch-depth: 0 # Fetch all history for git hash.
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
-
-      - name: Cache Cargo registry
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-registry-
-
-      - name: Cache Cargo index
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-git-
-
-      - name: Cache Cargo build
-        uses: actions/cache@v4
-        with:
-          path: target
-          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-build-target-
+          ref: ${{ inputs.ref }}
 
       - name: Install system dependencies (Linux)
-        if: matrix.os == 'ubuntu-latest'
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libusb-1.0-0-dev pkg-config
 
-      - name: Check formatting
-        run: cargo fmt --all -- --check
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
 
-      - name: Run clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: Cache cargo
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
 
       - name: Run tests
-        run: cargo test --verbose
+        run: cargo test --locked --release
 
-      - name: Build release binary
-        run: cargo build --release --target ${{ matrix.target }} --verbose
+      - name: Build
+        run: cargo build --locked --release
 
-      - name: Strip binary (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        run: strip target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+      # Archive on the runner: upload-artifact drops the executable bit.
+      - name: Package
+        run: |
+          rm -rf dist
+          mkdir -p "dist/$PACKAGE"
+          cp LICENSE README.md "dist/$PACKAGE/"
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            cp target/release/smgun.exe "dist/$PACKAGE/"
+            (cd dist && pwsh -NoProfile -Command "Compress-Archive -Path '$PACKAGE' -DestinationPath '$PACKAGE.zip'")
+          else
+            cp target/release/smgun "dist/$PACKAGE/"
+            tar -C dist -czf "dist/$PACKAGE.tar.gz" "$PACKAGE"
+          fi
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.asset_name }}
-          path: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+          name: ${{ env.PACKAGE }}
+          path: dist/${{ env.PACKAGE }}.${{ matrix.archive }}
           if-no-files-found: error
 
-  # Create a combined artifact with all builds.
-  create-release-archive:
-    needs: build
+  # Both targets from Linux: the Windows path (Raw Input) only needs windows-sys, which
+  # type-checks without the MSVC toolchain.
+  clippy:
+    name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
         with:
-          path: artifacts
+          ref: ${{ inputs.ref }}
 
-      - name: List artifacts
-        run: ls -R artifacts/
-
-      - name: Create release archive
+      - name: Install system dependencies
         run: |
-          mkdir -p release
-          cp artifacts/*/* release/
-          cd release
-          chmod +x smgun 2>/dev/null || true
-          tar czf ../smgun-builds.tar.gz *
+          sudo apt-get update
+          sudo apt-get install -y libusb-1.0-0-dev pkg-config
 
-      - name: Upload combined archive
-        uses: actions/upload-artifact@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
         with:
-          name: smgun-all-platforms
-          path: smgun-builds.tar.gz
+          components: clippy
+          targets: x86_64-pc-windows-msvc
+
+      - name: Cache cargo
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-clippy-${{ hashFiles('Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-clippy-
+
+      - name: Run clippy (Linux)
+        run: cargo clippy --locked --all-targets --all-features -- -D warnings
+
+      - name: Run clippy (Windows)
+        run: cargo clippy --locked --all-targets --all-features --target x86_64-pc-windows-msvc -- -D warnings
+
+  fmt:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Check formatting
+        run: cargo fmt -- --check
+
+  scripts:
+    name: Scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Run shellcheck
+        run: shellcheck scripts/*.sh
+
+      - name: Test version and changelog scripts
+        run: scripts/test.sh

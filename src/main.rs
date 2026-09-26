@@ -100,7 +100,7 @@ fn print_banner() {
     println!();
     println!(
         "Supermodel Lightgun Auto-Configurator v{} (hash: {}, date: {})",
-        env!("CARGO_PKG_VERSION"),
+        env!("SMGUN_VERSION"),
         env!("GIT_HASH"),
         env!("BUILD_DATE")
     );

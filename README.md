@@ -1,6 +1,6 @@
 # Supermodel Lightgun Auto-Configurator
 
-![Build Status](https://github.com/tbreckle/smgun/workflows/Build/badge.svg)
+[![CI](https://github.com/tbreckle/smgun/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/tbreckle/smgun/actions/workflows/ci.yml)
 
 Automatically configure Supermodel emulator to select connected lightguns by searching for USB VID:PID combinations and automatically updating the Supermodel configuration file. No manual assignment needed—just specify the VID:PID of your lightguns and the tool handles the rest.
 
@@ -82,10 +82,12 @@ The tool detects any USB HID (Human Interface Device) with input endpoints, whic
 
 ### Pre-built Binaries
 
-Download pre-built binaries for Linux and Windows from the [GitHub Actions artifacts](https://github.com/tbreckle/smgun/actions). Each successful build produces:
-- `smgun-linux-x86_64` - Linux binary
-- `smgun-windows-x86_64.exe` - Windows binary
-- `smgun-all-platforms` - Combined archive with all binaries
+Download the latest release for Linux and Windows from [GitHub Releases](https://github.com/tbreckle/smgun/releases):
+- `smgun-<version>-linux-x86_64.tar.gz` - Linux binary
+- `smgun-<version>-windows-x86_64.zip` - Windows binary
+- `SHA256SUMS` - checksums of the archives
+
+Unofficial builds of every branch (`0.0.0+<commit>`) are attached to the [CI runs](https://github.com/tbreckle/smgun/actions/workflows/ci.yml) as artifacts.
 
 ### Build from Source
 

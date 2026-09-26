@@ -19,6 +19,15 @@ fn main() {
     println!("cargo:rerun-if-changed=src");
     println!("cargo:rerun-if-changed=Cargo.toml");
 
+    // CI injects the version computed by scripts/version.sh. Cargo.toml stays at 0.0.0, so
+    // local builds are marked as unofficial.
+    println!("cargo:rerun-if-env-changed=SMGUN_VERSION");
+    let version = std::env::var("SMGUN_VERSION")
+        .ok()
+        .filter(|v| !v.is_empty())
+        .unwrap_or_else(|| env!("CARGO_PKG_VERSION").to_string());
+    println!("cargo:rustc-env=SMGUN_VERSION={}", version);
+
     // Generate git hash
     let git_hash = command_output("git", &["rev-parse", "--short", "HEAD"]);
     println!("cargo:rustc-env=GIT_HASH={}", git_hash);

@@ -1,6 +1,6 @@
 [package]
 name = "smgun"
-version = "0.1.0"
+version = "0.0.0"
 edition = "2021"
 description = "Auto-configure Supermodel emulator by automatically selecting connected lightguns via USB VID:PID matching and updating the configuration"
 
@@ -43,3 +43,4 @@ overflow-checks = false
 lto = true
 panic = "abort"
 codegen-units = 1
+strip = true
