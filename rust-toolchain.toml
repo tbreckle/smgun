@@ -1,0 +1,7 @@
+# Pinned toolchain for local builds and CI (build.yml installs it with `rustup toolchain install`).
+# The Windows target lets clippy check the Raw Input code from Linux.
+[toolchain]
+channel = "1.98.1"
+profile = "minimal"
+components = ["clippy", "rustfmt"]
+targets = ["x86_64-pc-windows-msvc"]

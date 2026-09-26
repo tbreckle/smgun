@@ -1,104 +1,242 @@
-# Supermodel Lightgun Auto-Configurator
+<div align="center">
+
+```
+  ______ _____    ____  __ __  ____
+ /  ___//     \  / ___\|  |  \/    \
+ \___ \|  Y Y  \/ /_/  >  |  /   |  \
+/____  >__|_|  /\___  /|____/|___|  /
+     \/      \//_____/            \/
+```
+
+### 🎯 Plug in your lightguns. Run one command. Play.
+
+**smgun** assigns your USB lightguns to Player 1 and Player 2 in the
+[Supermodel](https://www.supermodel3.com/) Sega Model 3 emulator automatically,
+so you never have to work out `MOUSE1` and `MOUSE2` by hand again.
 
 [![CI](https://github.com/tbreckle/smgun/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/tbreckle/smgun/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/tbreckle/smgun?sort=semver&display_name=tag)](https://github.com/tbreckle/smgun/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-blue)
+![Built with Rust](https://img.shields.io/badge/built%20with-Rust-orange?logo=rust)
 
-Automatically configure Supermodel emulator to select connected lightguns by searching for USB VID:PID combinations and automatically updating the Supermodel configuration file. No manual assignment needed—just specify the VID:PID of your lightguns and the tool handles the rest.
+[**Download**](https://github.com/tbreckle/smgun/releases) ·
+[Quick Start](#-quick-start) ·
+[How It Works](#%EF%B8%8F-how-it-works) ·
+[Usage](#-usage) ·
+[FAQ](#-faq) ·
+[Development](DEV.md)
 
-## What It Does
+</div>
 
-- **Searches** all connected USB devices for specified VID:PID combinations
-- **Matches** lightguns by their USB vendor ID and product ID
-- **Auto-Configures** Player 1 and Player 2 settings based on device discovery
-- **Updates** the Supermodel INI file automatically
-- **Preserves** your existing INI file layout and other settings
+---
 
-## Quick Start
+## 🤔 The Problem
 
-1. Connect your lightgun devices to your computer
-2. Identify your lightguns' USB VID:PID values
-3. Run the tool with your VID:PID combinations:
-   ```bash
-   smgun --gun1 046D:C05A --gun2 046D:C05B --ini Config/Supermodel.ini
-   ```
-4. Or list available devices first:
-   ```bash
-   smgun --list
-   ```
+Supermodel numbers mice as `MOUSE1`, `MOUSE2`, … in the order the operating system reports them.
+That order changes when you plug devices into different ports, add a new mouse or just reboot.
+One day Player 1's gun controls Player 2's crosshair, and you're back to editing
+`Supermodel.ini` by hand.
 
-The tool automatically updates your Supermodel INI file with the matched lightgun devices.
+## ✨ The Fix
 
-## How It Works
+Tell smgun your guns' **USB VID:PID** once. Every time you run it, it finds the guns, works out
+which `MOUSEx` numbers Supermodel will give them, and writes those into your INI file.
 
-The tool searches for devices matching your specified VID:PID values and updates your INI file with the following mappings (the mouse numbers depend on the order in which Supermodel sees your mice):
-
-### For Player 1:
-```ini
-InputGunX = "MOUSE1_XAXIS"               ; Horizontal aiming
-InputGunY = "MOUSE1_YAXIS"               ; Vertical aiming
-InputTrigger = "MOUSE1_LEFT_BUTTON"      ; Trigger
-InputOffscreen = "MOUSE1_RIGHT_BUTTON"   ; Point off-screen (reload)
+```console
+$ smgun --gun1 046D:C05A --gun2 046D:C05B
+[INFO  smgun] Found 3 device(s):
+[INFO  smgun]   Mouse 1: USB Optical Mouse (VID:046D PID:C077)
+[INFO  smgun]   Mouse 2: Lightgun A (VID:046D PID:C05A)
+[INFO  smgun]   Mouse 3: Lightgun B (VID:046D PID:C05B)
+[INFO  smgun]
+[INFO  smgun] Player 1: Device 2 (VID:046D PID:C05A)
+[INFO  smgun] Player 2: Device 3 (VID:046D PID:C05B)
+[INFO  smgun]
+[INFO  smgun] Successfully updated Supermodel configuration: Config/Supermodel.ini
 ```
 
-### For Player 2:
-```ini
-InputGunX2 = "MOUSE2_XAXIS"
-InputGunY2 = "MOUSE2_YAXIS"
-InputTrigger2 = "MOUSE2_LEFT_BUTTON"
-InputOffscreen2 = "MOUSE2_RIGHT_BUTTON"
+## 🚀 Features
+
+| | |
+|---|---|
+| 🔍 **VID:PID matching** | Finds your guns by USB vendor and product ID, whatever port they're in |
+| 🪟 **Matches Supermodel on Windows** | Lists mice through Raw Input in the same order as Supermodel, so the `MOUSEx` numbers are right |
+| 👯 **Identical guns work** | Two guns with the same VID:PID are assigned in device order, and the same device is never given to both players |
+| 📝 **Leaves your INI alone** | Only the gun settings change; comments, layout and all other settings stay as they are |
+| 🎮 **Digital and analog guns** | `--use-analog` writes the analog gun settings used by Ocean Hunter and L.A. Machineguns |
+| 🧩 **Per-game sections too** | Gun settings in game sections are updated as well, so they can't override the new values |
+| 🔓 **No admin rights** | Runs as a normal user on Windows and Linux |
+| ⚡ **One small binary** | No runtime, no installer, just a single executable |
+
+## ⚡ Quick Start
+
+**1. Download** the archive for your platform from the
+[latest release](https://github.com/tbreckle/smgun/releases/latest) and extract it into your
+Supermodel folder.
+
+**2. Find your guns' VID:PID:**
+
+```bash
+smgun --list
 ```
 
-With `--use-analog`, the analog gun settings (Ocean Hunter, LA Machineguns) are written instead: `InputAnalogGunX`, `InputAnalogGunY`, `InputAnalogTriggerLeft` and `InputAnalogTriggerRight` (with a `2` suffix for Player 2).
+**3. Configure Supermodel:**
 
-Settings are updated wherever they appear (including per-game sections, so they can't override the new values). Settings missing from `[ Global ]` are added to it.
-
-These values tell Supermodel which mouse device to use for each player's gun control.
-
-### Windows
-
-On Windows, the tool enumerates mice through the Raw Input API in exactly the same order as Supermodel, so the `MOUSEx` numbers match. Supermodel has to use the Raw Input system for multiple mice to work (or run it with `-input-system=rawinput`):
-
-```ini
-InputSystem = "rawinput"
+```bash
+smgun --gun1 046D:C05A --gun2 046D:C05B
 ```
 
-## Features
+That's it. Start Supermodel and shoot. 🔫
 
-- **VID:PID Matching** - Automatically finds lightguns by USB vendor and product IDs
-- **Batch Configuration** - Configure both players in a single command
-- **Conflict Prevention** - The tool never assigns the same device to both players (two guns with the same VID:PID are assigned in device order)
-- **Flexible Input** - Supports both single-gun and dual-gun setups
-- **INI Preservation** - Your existing INI structure, comments, and settings are maintained
-- **No Root Required** - Works without administrator/sudo privileges on Linux
+> [!IMPORTANT]
+> On Windows, Supermodel has to use Raw Input to tell several mice apart. Set it in your INI file
+> or start Supermodel with `-input-system=rawinput`:
+> ```ini
+> InputSystem = "rawinput"
+> ```
 
-## Supported Devices
+## ⚙️ How It Works
 
-The tool detects any USB HID (Human Interface Device) with input endpoints, which includes:
-- Standard USB mice
-- Arcade lightguns
-- Spinner/trackball controllers
-- Any similar USB input devices
+```mermaid
+flowchart LR
+    A["🔌 USB devices"] --> B["📋 List mice<br/>(Supermodel's order)"]
+    B --> C["🔍 Match VID:PID<br/>--gun1 / --gun2"]
+    C --> D["🔢 MOUSEx index"]
+    D --> E["📝 Supermodel.ini"]
+    E --> F["🎮 Supermodel"]
+```
 
-## Installation
+smgun writes these settings for **Player 1**:
 
-### Pre-built Binaries
+```ini
+InputGunX      = "MOUSE1_XAXIS"         ; horizontal aim
+InputGunY      = "MOUSE1_YAXIS"         ; vertical aim
+InputTrigger   = "MOUSE1_LEFT_BUTTON"   ; trigger
+InputOffscreen = "MOUSE1_RIGHT_BUTTON"  ; point off-screen (reload)
+```
 
-Download the latest release for Linux and Windows from [GitHub Releases](https://github.com/tbreckle/smgun/releases):
-- `smgun-<version>-linux-x86_64.tar.gz` - Linux binary
-- `smgun-<version>-windows-x86_64.zip` - Windows binary
-- `SHA256SUMS` - checksums of the archives
+**Player 2** gets the same settings with a `2` suffix (`InputGunX2`, `InputTrigger2`, …), and
+with `--use-analog` smgun writes `InputAnalogGunX`, `InputAnalogGunY`, `InputAnalogTriggerLeft`
+and `InputAnalogTriggerRight` instead.
 
-Unofficial builds of every branch (`0.0.0+<commit>`) are attached to the [CI runs](https://github.com/tbreckle/smgun/actions/workflows/ci.yml) as artifacts.
+Settings are updated wherever they appear. Settings missing from `[ Global ]` are added there.
 
-### Build from Source
+## 📖 Usage
 
-See [Development Guide](DEV.md) for instructions on building from source.
+```text
+smgun [OPTIONS] --gun1 <VID:PID>
+smgun --list
+```
 
-## Need Help Building or Developing?
+| Option | Description |
+|---|---|
+| `-l`, `--list` | List all mice with their index and VID:PID, then exit |
+| `-1`, `--gun1 <VID:PID>` | Player 1's lightgun, e.g. `046D:C05A` (required unless `--list`) |
+| `-2`, `--gun2 <VID:PID>` | Player 2's lightgun (optional) |
+| `-i`, `--ini <FILE>` | Supermodel INI file to update (default: `Config/Supermodel.ini`) |
+| `--use-analog` | Write the analog gun settings instead of the digital ones |
+| `-h`, `--help` | Show help |
 
-See [Development Guide](DEV.md) for technical details about building from source and contributing.
+Set `RUST_LOG=debug` for detailed logging.
 
-## License
+### 🕹️ Run it from your frontend
 
-MIT
+smgun exits with a non-zero status when a gun is missing, so you can put it in front of
+Supermodel in a launcher script (LaunchBox, RetroBat, a desktop shortcut, …):
 
+```bat
+@echo off
+cd /d "%~dp0"
+smgun.exe --gun1 046D:C05A --gun2 046D:C05B || (pause & exit /b 1)
+Supermodel.exe %*
+```
 
+Every launch picks up the current device order, even after replugging or a reboot.
+
+## 💻 Platforms
+
+| Platform | Status | Mouse order from |
+|---|---|---|
+| 🪟 **Windows** | ✅ Main target, pre-built | Raw Input, in the same order as Supermodel |
+| 🐧 **Linux** | ✅ Pre-built | libusb, sorted by bus; names from sysfs |
+| 🍎 **macOS** | 🛠️ Build from source | libusb |
+
+Every mouse counts towards the index on Windows, including touchpads and other non-USB pointing
+devices (shown as `VID:0000 PID:0000`).
+
+## 📦 Installation
+
+### Pre-built binaries
+
+Get them from [GitHub Releases](https://github.com/tbreckle/smgun/releases):
+
+| File | Contents |
+|---|---|
+| `smgun-<version>-windows-x86_64.zip` | `smgun.exe`, README, LICENSE |
+| `smgun-<version>-linux-x86_64.tar.gz` | `smgun`, README, LICENSE |
+| `SHA256SUMS` | Checksums of the archives |
+
+Want the latest development build? Every [CI run](https://github.com/tbreckle/smgun/actions/workflows/ci.yml)
+attaches unofficial builds (`0.0.0+<commit>`) as artifacts.
+
+### From source
+
+```bash
+git clone https://github.com/tbreckle/smgun.git
+cd smgun
+cargo build --release   # Linux needs libusb-1.0-0-dev and pkg-config
+```
+
+See the [Development Guide](DEV.md) for details.
+
+## ❓ FAQ
+
+<details>
+<summary><b>How do I find my gun's VID:PID?</b></summary>
+
+Run `smgun --list` with the gun plugged in. Unplug it and run the command again if you're not
+sure which entry it is: the one that disappeared is your gun.
+</details>
+
+<details>
+<summary><b>I have two identical guns. Does that work?</b></summary>
+
+Yes. Pass the same VID:PID for both players. The first matching device goes to Player 1, the
+next one to Player 2. Swap the USB ports if they end up the wrong way round.
+</details>
+
+<details>
+<summary><b>Player 1 and 2 still control the same crosshair on Windows.</b></summary>
+
+Supermodel isn't using Raw Input. Set `InputSystem = "rawinput"` in `Supermodel.ini` or start it
+with `-input-system=rawinput`.
+</details>
+
+<details>
+<summary><b>"Player 1 lightgun with VID:… PID:… not found"</b></summary>
+
+The gun isn't connected, or it reports a different VID:PID than the one you passed. Check with
+`smgun --list`.
+</details>
+
+<details>
+<summary><b>Will it mess up my Supermodel.ini?</b></summary>
+
+No. Only the gun input settings are changed; everything else, including comments and layout,
+stays as it is.
+</details>
+
+## 🤝 Contributing
+
+Issues and pull requests are welcome! The project uses GitFlow: branch off `develop` and open
+your PR against it. See [DEV.md](DEV.md) for building and checks, [GITFLOW.md](GITFLOW.md) for
+branches and releases, and [CHANGELOG.md](CHANGELOG.md) for what's new.
+
+## 📄 License
+
+[MIT](LICENSE) © Supermodel Lightgun Auto-Configurator Contributors
+
+<div align="center">
+<sub>Made with 🦀 for everyone who wants to shoot instead of editing INI files.</sub>
+</div>

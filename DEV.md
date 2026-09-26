@@ -4,7 +4,8 @@ This document covers technical details about building, developing, and contribut
 
 ## Requirements
 
-- **Rust 2021 Edition** - Install from https://rustup.rs/
+- **Rust** - Install rustup from https://rustup.rs/. The toolchain version, components and the
+  Windows target are pinned in `rust-toolchain.toml`; rustup installs them on the first `cargo` call.
 - **libusb development libraries** (not needed on Windows)
   - Ubuntu/Debian: `sudo apt-get install libusb-1.0-0-dev`
   - macOS: `brew install libusb`
